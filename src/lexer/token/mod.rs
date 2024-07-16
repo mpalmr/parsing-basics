@@ -1,7 +1,8 @@
 mod kind;
 mod span;
 
-pub use self::{kind::TokenKind, span::Span};
+pub use kind::TokenKind;
+pub use span::Span;
 
 use std::fmt;
 
