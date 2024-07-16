@@ -7,41 +7,32 @@ use self::{
 };
 use crate::T;
 
-pub struct Lexer;
+pub struct Lexer<'input> {
+    input: &'input str,
+    position: u32,
+    eof: bool,
+}
 
-impl Lexer {
-    pub fn new() -> Self {
-        Self
+impl<'input> Lexer<'input> {
+    pub fn new(input: &'input str) -> Self {
+        Self {
+            input,
+            position: 0,
+            eof: false,
+        }
     }
 
-    pub fn next_token(&self, input: &str) -> Token {
+    pub fn tokenize(&mut self) -> Vec<Token> {
+        self.collect()
+    }
+
+    pub fn next_token(&mut self, input: &str) -> Token {
         self.valid_token(input)
             .unwrap_or_else(|| self.invalid_token(input))
     }
 
-    pub fn tokenize(&self, input: &str) -> Vec<Token> {
-        let mut ret = Vec::new();
-        let mut suffix = input;
-
-        while !suffix.is_empty() {
-            let token = self.next_token(suffix);
-            ret.push(token);
-            suffix = &suffix[token.len()..];
-        }
-
-        ret.push(Token {
-            kind: T![EOF],
-            span: Span {
-                start: input.len() as u32,
-                end: input.len() as u32,
-            },
-        });
-
-        ret
-    }
-
     /// Returns `None` if the lexer cannot find a token at the start of `input`.
-    fn valid_token(&self, input: &str) -> Option<Token> {
+    fn valid_token(&mut self, input: &str) -> Option<Token> {
         let next = input.chars().next().unwrap();
         let (len, kind) = if let Some(kind) = unambiguous_single_char(next) {
             (1, kind)
@@ -49,27 +40,62 @@ impl Lexer {
             return None;
         };
 
+        let start = self.position;
+        self.position += len;
+
         Some(Token {
             kind,
-            span: Span { start: 0, end: len },
+            span: Span {
+                start,
+                end: start + len,
+            },
         })
     }
 
     /// Always "succeeds", because it creates an error `Token`.
-    fn invalid_token(&self, input: &str) -> Token {
+    fn invalid_token(&mut self, input: &str) -> Token {
+        let start = self.position;
         let len = input
             .char_indices()
             .find(|(pos, _)| self.valid_token(&input[*pos..]).is_some())
             .map(|(pos, _)| pos)
             .unwrap_or_else(|| input.len());
-
         debug_assert!(len <= input.len());
+
+        // Because `valid_token` advances our position,
+        // we need to reset it to after the erroneous token.
+        let len = len as u32;
+        self.position = start + len;
+
         Token {
             kind: T![error],
             span: Span {
-                start: 0,
-                end: len as u32,
+                start,
+                end: start + len,
             },
+        }
+    }
+}
+
+impl<'input> Iterator for Lexer<'input> {
+    type Item = Token;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.position as usize >= self.input.len() {
+            if self.eof {
+                return None;
+            }
+            self.eof = true;
+
+            Some(Token {
+                kind: T![EOF],
+                span: Span {
+                    start: self.position,
+                    end: self.position,
+                },
+            })
+        } else {
+            Some(self.next_token(&self.input[self.position as usize..]))
         }
     }
 }
