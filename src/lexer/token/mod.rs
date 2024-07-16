@@ -1,5 +1,5 @@
-mod kind;
-mod span;
+pub mod kind;
+pub mod span;
 
 use self::{span::Span, kind::TokenKind};
 use std::fmt;
