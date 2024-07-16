@@ -1,4 +1,5 @@
 use parsing_basics::{lexer::*, T};
+use unindent::unindent;
 
 /// Walks `$tokens` and compares them to the given kinds.
 macro_rules! assert_tokens {
@@ -93,13 +94,108 @@ fn keywords() {
         .filter(|token| token.kind != T![ws])
         .collect();
 
+    assert_tokens!(
+        tokens,
+        [
+            T![if],
+            T![let],
+            T![=],
+            T![struct],
+            T![else],
+            T![fn],
+            T![EOF],
+        ]
+    );
+}
+
+#[test]
+#[rustfmt::skip]
+fn function() {
+    let input = unindent(r#"
+        // tests stuff
+        fn test(var: Type, var2_: bool) {
+            let x = "String content \" test" + 7 / 27.3e-2^4;
+            let chars = x.chars();
+            if let Some(c) = chars.next() {
+                x = x + c;
+            } else if !var2_ {
+                x = x + ",";
+            }
+        }
+    "#);
+
+    let mut lexer = Lexer::new(input.as_str());
+    let tokens: Vec<_> = lexer.tokenize().into_iter().filter(|t| t.kind != T![ws]).collect();
+
     assert_tokens!(tokens, [
-        T![if],
-        T![let],
-        T![=],
-        T![struct],
-        T![else],
-        T![fn],
+        // `// tests stuff`
+        T![comment],
+
+        // fn test(var: Type, var2_: bool) {
+        T![fn], T![ident], T!['('],
+            T![ident], T![:], T![ident], T![,],
+            T![ident], T![:], T![ident],
+        T![')'], T!['{'],
+
+            // let x = "String content \" test" + 7 / 27.3e-2^4;
+            T![let], T![ident], T![=],
+                T![string], T![+], T![int], T![/], T![float], T![^], T![int], T![;],
+
+            // let chars = x.chars();
+            T![let], T![ident], T![=],
+                T![ident], T![.], T![ident], T!['('], T![')'], T![;],
+
+            // if let Some(c) = chars.next() {
+            T![if], T![let], T![ident], T!['('], T![ident], T![')'], T![=],
+                T![ident], T![.], T![ident], T!['('], T![')'],
+            T!['{'],
+
+                // x = x + c;
+                T![ident], T![=], T![ident], T![+], T![ident], T![;],
+
+            // } else if !var2_ {
+            T!['}'], T![else], T![if], T![!], T![ident], T!['{'],
+
+                // x = x + ",";
+                T![ident], T![=], T![ident], T![+], T![string], T![;],
+
+            T!['}'],
+        T!['}'],
         T![EOF],
     ]);
+}
+
+#[test]
+#[rustfmt::skip]
+fn struct_def() {
+    let input = unindent(r#"
+        struct Foo<T> {
+            bar: Bar<T>,
+        }
+    "#);
+    let input = input.as_str();
+
+    let mut lexer = Lexer::new(input);
+    let tokens: Vec<_> = lexer
+        .tokenize()
+        .into_iter()
+        .filter(|token| token.kind != T![ws])
+        .collect();
+
+    assert_tokens!(tokens, [
+        // struct Foo<T> {
+        T![struct], T![ident], T![<], T![ident], T![>], T!['{'],
+
+            // bar: Bar<T>,
+            T![ident], T![:], T![ident], T![<], T![ident], T![>], T![,],
+
+        T!['}'],
+    ]);
+
+    let foo = tokens[1];
+    assert_eq!(foo.text(input), "Foo");
+
+    let bar = tokens[6];
+    assert_eq!(bar.span, (20..23).into());
+    assert_eq!(bar.text(input), "bar");
 }
