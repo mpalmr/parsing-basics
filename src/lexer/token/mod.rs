@@ -1,7 +1,8 @@
-pub mod kind;
-pub mod span;
+mod kind;
+mod span;
 
-use self::{kind::TokenKind, span::Span};
+pub use self::{kind::TokenKind, span::Span};
+
 use std::fmt;
 
 #[derive(Eq, PartialEq, Copy, Clone, Hash)]

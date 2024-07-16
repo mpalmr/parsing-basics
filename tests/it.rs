@@ -17,7 +17,10 @@ macro_rules! assert_tokens {
 fn single_char_tokens() {
     let mut lexer = Lexer::new("+-(.):");
     let tokens = lexer.tokenize();
-    assert_tokens!(tokens, [T![+], T![-], T!['('], T![.], T![')'], T![:], T![EOF],]);
+    assert_tokens!(
+        tokens,
+        [T![+], T![-], T!['('], T![.], T![')'], T![:], T![EOF],]
+    );
 }
 
 #[test]
@@ -64,9 +67,39 @@ fn single_char_tokens_with_whitespace() {
     assert_eq!(trailing_space.kind, T![ws]);
     assert_eq!(trailing_space.len(), 1);
 
-    let tokens: Vec<_> = tokens
+    let tokens: Vec<_> = tokens.into_iter().filter(|t| t.kind != T![ws]).collect();
+    assert_tokens!(
+        tokens,
+        [T![+], T![-], T!['('], T![.], T![')'], T![:], T![EOF],]
+    );
+}
+
+#[test]
+fn maybe_multiple_char_tokens() {
+    let mut lexer = Lexer::new("&&=<=_!=||");
+    let tokens = lexer.tokenize();
+    assert_tokens!(
+        tokens,
+        [T![&&], T![=], T![<=], T![_], T![!=], T![||], T![EOF],]
+    );
+}
+
+#[test]
+fn keywords() {
+    let mut lexer = Lexer::new("if let = struct else fn");
+    let tokens: Vec<_> = lexer
+        .tokenize()
         .into_iter()
-        .filter(|t| t.kind != T![ws])
+        .filter(|token| token.kind != T![ws])
         .collect();
-    assert_tokens!(tokens, [T![+], T![-], T!['('], T![.], T![')'], T![:], T![EOF],]);
+
+    assert_tokens!(tokens, [
+        T![if],
+        T![let],
+        T![=],
+        T![struct],
+        T![else],
+        T![fn],
+        T![EOF],
+    ]);
 }

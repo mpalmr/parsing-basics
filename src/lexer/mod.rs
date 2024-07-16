@@ -1,16 +1,16 @@
 mod rules;
-pub mod token;
+mod token;
 
-use self::{
-    rules::unambiguous_single_char,
-    token::{span::Span, Token},
-};
+pub use token::{Span, Token, TokenKind};
+
 use crate::T;
+use rules::{get_rules, unambiguous_single_char, Rule};
 
 pub struct Lexer<'input> {
     input: &'input str,
     position: u32,
     eof: bool,
+    rules: Vec<Rule>,
 }
 
 impl<'input> Lexer<'input> {
@@ -19,6 +19,7 @@ impl<'input> Lexer<'input> {
             input,
             position: 0,
             eof: false,
+            rules: get_rules(),
         }
     }
 
@@ -48,7 +49,14 @@ impl<'input> Lexer<'input> {
         } else if let Some(kind) = unambiguous_single_char(next) {
             (1, kind)
         } else {
-            return None;
+            self.rules
+                .iter()
+                // `max_by_key` returns the last element if multiple
+                // rules match, but we want earlier rules to "win"
+                // against later ones
+                .rev()
+                .filter_map(|rule| Some(((rule.matches)(input)?, rule.kind)))
+                .max_by_key(|&(len, _)| len)?
         };
 
         let start = self.position;
