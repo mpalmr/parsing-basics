@@ -1,7 +1,7 @@
 pub mod kind;
 pub mod span;
 
-use self::{span::Span, kind::TokenKind};
+use self::{kind::TokenKind, span::Span};
 use std::fmt;
 
 #[derive(Eq, PartialEq, Copy, Clone, Hash)]
@@ -22,7 +22,11 @@ impl Token {
 
 impl fmt::Debug for Token {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?} - <{}, {}>", self.kind, self.span.start, self.span.end)
+        write!(
+            f,
+            "{:?} - <{}, {}>",
+            self.kind, self.span.start, self.span.end
+        )
     }
 }
 
@@ -34,26 +38,20 @@ impl fmt::Display for Token {
 
 #[cfg(test)]
 mod tests {
-    use crate::T;
     use super::*;
+    use crate::T;
 
     #[test]
     fn token_len() {
         let token = Token {
             kind: T![==],
-            span: Span {
-                start: 0,
-                end: 2,
-            },
+            span: Span { start: 0, end: 2 },
         };
         assert_eq!(token.len(), 2);
 
         let token = Token {
             kind: T![ident],
-            span: Span {
-                start: 2,
-                end: 7,
-            },
+            span: Span { start: 2, end: 7 },
         };
         assert_eq!(token.len(), 5);
     }
@@ -63,19 +61,13 @@ mod tests {
         let input = "let x = 42;";
         let token = Token {
             kind: T![ident],
-            span: Span {
-                start: 4,
-                end: 5,
-            },
+            span: Span { start: 4, end: 5 },
         };
         assert_eq!(token.text(input), "x");
 
         let token = Token {
             kind: T![=],
-            span: Span {
-                start: 6,
-                end: 7,
-            },
+            span: Span { start: 6, end: 7 },
         };
         assert_eq!(token.text(input), "=");
     }

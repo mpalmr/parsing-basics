@@ -1,5 +1,5 @@
-use crate::T;
 use super::token::kind::TokenKind;
+use crate::T;
 
 /// If the given character is a character that _only_
 /// represents a token of length 1,
@@ -33,8 +33,8 @@ mod tests {
 
     #[test]
     fn unambiguous_single_char() {
-        use crate::T;
         use super::*;
+        use crate::T;
 
         assert_eq!(unambiguous_single_char('+'), Some(T![+]));
         assert_eq!(unambiguous_single_char('-'), Some(T![-]));

@@ -179,54 +179,58 @@ macro_rules! T {
 
 impl fmt::Display for TokenKind {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", match self {
-            // Single characters
-            T![+] => "+",
-            T![-] => "-",
-            T![*] => "*",
-            T![/] => "/",
-            T![^] => "^",
-            T![=] => "=",
-            T![.] => ".",
-            T![,] => ",",
-            T![_] => "_",
-            T![!] => "!",
-            T![&] => "&",
-            T![|] => "|",
-            T![:] => ":",
-            T![;] => ";",
-            // Brackets
-            T![<] => "<",
-            T![>] => ">",
-            T!['['] => "[",
-            T![']'] => "]",
-            T!['{'] => "{",
-            T!['}'] => "}",
-            T!['('] => "(",
-            T![')'] => ")",
-            // Multiple characters
-            T![string] => "String",
-            T![comment] => "// Comment",
-            T![int] => "Int",
-            T![float] => "Float",
-            T![ident] => "Identifier",
-            T![let] => "let",
-            T![fn] => "fn",
-            T![struct] => "struct",
-            T![if] => "if",
-            T![else] => "else",
-            // Operators
-            T![&&] => "&&",
-            T![||] => "||",
-            T![==] => "==",
-            T![!=] => "!=",
-            T![>=] => ">=",
-            T![<=] => "<=",
-            // Misc
-            T![error] => "<?>",
-            T![ws] => "<WS>",
-            T![EOF] => "<EOF>",
-        })
+        write!(
+            f,
+            "{}",
+            match self {
+                // Single characters
+                T![+] => "+",
+                T![-] => "-",
+                T![*] => "*",
+                T![/] => "/",
+                T![^] => "^",
+                T![=] => "=",
+                T![.] => ".",
+                T![,] => ",",
+                T![_] => "_",
+                T![!] => "!",
+                T![&] => "&",
+                T![|] => "|",
+                T![:] => ":",
+                T![;] => ";",
+                // Brackets
+                T![<] => "<",
+                T![>] => ">",
+                T!['['] => "[",
+                T![']'] => "]",
+                T!['{'] => "{",
+                T!['}'] => "}",
+                T!['('] => "(",
+                T![')'] => ")",
+                // Multiple characters
+                T![string] => "String",
+                T![comment] => "// Comment",
+                T![int] => "Int",
+                T![float] => "Float",
+                T![ident] => "Identifier",
+                T![let] => "let",
+                T![fn] => "fn",
+                T![struct] => "struct",
+                T![if] => "if",
+                T![else] => "else",
+                // Operators
+                T![&&] => "&&",
+                T![||] => "||",
+                T![==] => "==",
+                T![!=] => "!=",
+                T![>=] => ">=",
+                T![<=] => "<=",
+                // Misc
+                T![error] => "<?>",
+                T![ws] => "<WS>",
+                T![EOF] => "<EOF>",
+            }
+        )
     }
 }
 

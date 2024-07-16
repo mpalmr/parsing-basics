@@ -1,13 +1,43 @@
 mod rules;
-mod token;
+pub mod token;
 
-use self::{rules::unambiguous_single_char, token::{span::Span, Token}};
+use self::{
+    rules::unambiguous_single_char,
+    token::{span::Span, Token},
+};
+use crate::T;
 
 pub struct Lexer;
 
 impl Lexer {
     pub fn new() -> Self {
         Self
+    }
+
+    pub fn next_token(&self, input: &str) -> Token {
+        self.valid_token(input)
+            .unwrap_or_else(|| self.invalid_token(input))
+    }
+
+    pub fn tokenize(&self, input: &str) -> Vec<Token> {
+        let mut ret = Vec::new();
+        let mut suffix = input;
+
+        while !suffix.is_empty() {
+            let token = self.next_token(suffix);
+            ret.push(token);
+            suffix = &suffix[token.len()..];
+        }
+
+        ret.push(Token {
+            kind: T![EOF],
+            span: Span {
+                start: input.len() as u32,
+                end: input.len() as u32,
+            },
+        });
+
+        ret
     }
 
     /// Returns `None` if the lexer cannot find a token at the start of `input`.
@@ -21,10 +51,25 @@ impl Lexer {
 
         Some(Token {
             kind,
+            span: Span { start: 0, end: len },
+        })
+    }
+
+    /// Always "succeeds", because it creates an error `Token`.
+    fn invalid_token(&self, input: &str) -> Token {
+        let len = input
+            .char_indices()
+            .find(|(pos, _)| self.valid_token(&input[*pos..]).is_some())
+            .map(|(pos, _)| pos)
+            .unwrap_or_else(|| input.len());
+
+        debug_assert!(len <= input.len());
+        Token {
+            kind: T![error],
             span: Span {
                 start: 0,
-                end: len,
+                end: len as u32,
             },
-        })
+        }
     }
 }

@@ -5,7 +5,7 @@
     clippy::correctness,
     clippy::pedantic,
     clippy::perf,
-    clippy::style,
+    clippy::style
 )]
 
 pub mod lexer;
