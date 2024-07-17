@@ -255,4 +255,19 @@ fn parse_binary_expressions() {
     assert_eq!(parse("4 * 2 + 3").to_string(), "((4 * 2) + 3)");
     assert_eq!(parse("4 - 2 - 3").to_string(), "((4 - 2) - 3)");
     assert_eq!(parse("4 ^ 2 ^ 3").to_string(), "(4 ^ (2 ^ 3))");
+
+    assert_eq!(
+        parse(r#"45.7 + 3 + 5 * 4^8^9 / 6 > 4 && test - 7 / 4 == "Hallo""#).to_string(),
+        r#"((((45.7 + 3) + ((5 * (4 ^ (8 ^ 9))) / 6)) > 4) && ((test - (7 / 4)) == "Hallo"))"#,
+    );
+
+    assert_eq!(
+        parse("2.0 / ((3.0 + 4.0) * (5.0 - 6.0)) * 7.0").to_string(),
+        "((2 / ((3 + 4) * (5 - 6))) * 7)",
+    );
+
+    assert_eq!(
+        parse("min ( test + 4 , sin(2*PI ))").to_string(),
+        "min((test + 4),sin((2 * PI),),)",
+    );
 }
