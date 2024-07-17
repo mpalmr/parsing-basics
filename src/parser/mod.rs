@@ -1,4 +1,4 @@
-mod ast;
+pub mod ast;
 mod expressions;
 mod token_iter;
 

@@ -1,4 +1,4 @@
-use parsing_basics::{lexer::*, T};
+use parsing_basics::{lexer::*, parser::{ast, Parser}, T};
 use unindent::unindent;
 
 /// Walks `$tokens` and compares them to the given kinds.
@@ -198,4 +198,61 @@ fn struct_def() {
     let bar = tokens[6];
     assert_eq!(bar.span, (20..23).into());
     assert_eq!(bar.text(input), "bar");
+}
+
+#[test]
+fn parse_expression() {
+    fn parse(input: &str) -> ast::Expr {
+        let mut parser = Parser::new(input);
+        parser.parse_expression(0)
+    }
+
+    // Weird spaces are to test that whitespace gets filtered out
+    assert_eq!(parse("42"), ast::Expr::Literal(ast::Lit::Int(42)));
+    assert_eq!(parse("  2.7768"), ast::Expr::Literal(ast::Lit::Float(2.7768)));
+    assert_eq!(
+        parse(r#""I am a String!""#),
+        ast::Expr::Literal(ast::Lit::Str("I am a String!".to_string())),
+    );
+    assert_eq!(parse("foo"), ast::Expr::Ident("foo".to_string()));
+
+    assert_eq!(
+        parse("bar (  x, 2)"),
+        ast::Expr::FnCall {
+            fn_name: "bar".to_string(),
+            args: vec![
+                ast::Expr::Ident("x".to_string()),
+                ast::Expr::Literal(ast::Lit::Int(2)),
+            ],
+        },
+    );
+
+    assert_eq!(
+        parse("!  is_visible"),
+        ast::Expr::PrefixOp {
+            op: T![!],
+            expr: Box::new(ast::Expr::Ident("is_visible".to_string())),
+        }
+    );
+
+    assert_eq!(
+        parse("(-13)"),
+        ast::Expr::PrefixOp {
+            op: T![-],
+            expr: Box::new(ast::Expr::Literal(ast::Lit::Int(13))),
+        }
+    );
+}
+
+#[test]
+fn parse_binary_expressions() {
+    fn parse(input: &str) -> ast::Expr {
+        let mut parser = Parser::new(input);
+        parser.parse_expression(0)
+    }
+
+    assert_eq!(parse("4 + 2 * 3").to_string(), "(4 + (2 * 3))");
+    assert_eq!(parse("4 * 2 + 3").to_string(), "((4 * 2) + 3)");
+    assert_eq!(parse("4 - 2 - 3").to_string(), "((4 - 2) - 3)");
+    assert_eq!(parse("4 ^ 2 ^ 3").to_string(), "(4 ^ (2 ^ 3))");
 }
